@@ -20,6 +20,7 @@ typedef struct {
 } IP_ADDRESS_STRING, *PIP_ADDRESS_STRING, IP_MASK_STRING, *PIP_MASK_STRING;
 
 typedef struct _IP_ADDR_STRING {
+  // NOTE: cffi didn't like `struct _IP_ADDR_STRING *Next;`
   void                   *Next;
   IP_ADDRESS_STRING      IpAddress;
   IP_MASK_STRING         IpMask;
@@ -53,7 +54,10 @@ def get_dns_servers():
 
     result = Iphlpapi.GetNetworkParams(pFixedInfo, pOutBufLen)
 
-    if result == ERROR_BUFFER_OVERFLOW:  # NOTE: this error is ok, it just means we need a bigger buffer
+    # NOTE: this error is ok; it means we need to supply a bigger buffer,
+    # and this error indicates that we must check updated value at pOutBufLen
+    # for the required size buffer we need to supply
+    if result == ERROR_BUFFER_OVERFLOW:
         bigger_FixedInfo = ffi.new("BYTE[]", pOutBufLen[0])
         pFixedInfo = ffi.cast("PFIXED_INFO", bigger_FixedInfo)
         result = Iphlpapi.GetNetworkParams(pFixedInfo, pOutBufLen)
@@ -62,6 +66,7 @@ def get_dns_servers():
     if result == 0:
         dns_servers.append(ffi.string(pFixedInfo.DnsServerList.IpAddress.String, 16))
 
+        # NOTE this cast is due to cffi issue noted above
         pIPAddr = ffi.cast("PIP_ADDR_STRING", pFixedInfo.DnsServerList.Next)
         while pIPAddr:
             dns_servers.append(ffi.string(pIPAddr.IpAddress.String, 16))
