@@ -11,7 +11,7 @@ ERROR_SUCCESS = 0
 ERROR_MORE_DATA = 234
 
 # https://docs.microsoft.com/en-us/windows/win32/api/windns/ne-windns-dns_config_type
-DNS_CONFIG_DNS_SERVER_LIST = 6
+DNS_CONFIG_DNS_SERVER_LIST = 7
 
 
 def get_dns_servers():

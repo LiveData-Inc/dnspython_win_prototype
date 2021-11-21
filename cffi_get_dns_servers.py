@@ -62,17 +62,22 @@ def get_dns_servers():
         pFixedInfo = ffi.cast("PFIXED_INFO", bigger_FixedInfo)
         result = Iphlpapi.GetNetworkParams(pFixedInfo, pOutBufLen)
 
+    host_name = None
+    domain_name = None
     dns_servers = []
     if result == 0:
-        dns_servers.append(ffi.string(pFixedInfo.DnsServerList.IpAddress.String, 16))
+        dns_servers.append(ffi.string(pFixedInfo.DnsServerList.IpAddress.String, 16).decode())
 
         # NOTE this cast is due to cffi issue noted above
         pIPAddr = ffi.cast("PIP_ADDR_STRING", pFixedInfo.DnsServerList.Next)
         while pIPAddr:
-            dns_servers.append(ffi.string(pIPAddr.IpAddress.String, 16))
+            dns_servers.append(ffi.string(pIPAddr.IpAddress.String, 16).decode())
             pIPAddr = pIPAddr.Next
 
-    return dns_servers
+        host_name = ffi.string(pFixedInfo.HostName).decode()
+        domain_name = ffi.string(pFixedInfo.DomainName).decode()
+
+    return host_name, domain_name, dns_servers
 
 
 def main():
