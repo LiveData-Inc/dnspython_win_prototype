@@ -48,14 +48,13 @@ DWORD GetNetworkParams(
 
 
 def get_dns_servers():
-    pFixedInfo = ffi.new("PFIXED_INFO")
     pOutBufLen = ffi.new("unsigned long *")
     pOutBufLen[0] = ffi.sizeof("FIXED_INFO")
 
-    result = Iphlpapi.GetNetworkParams(pFixedInfo, pOutBufLen)
+    result = Iphlpapi.GetNetworkParams(ffi.NULL, pOutBufLen)
 
-    # NOTE: this error is ok; it means we need to supply a bigger buffer,
-    # and this error indicates that we must check updated value at pOutBufLen
+    # NOTE: this error is expected; 
+    # it indicates that we must check updated value at pOutBufLen
     # for the required size buffer we need to supply
     if result == ERROR_BUFFER_OVERFLOW:
         bigger_FixedInfo = ffi.new("BYTE[]", pOutBufLen[0])
@@ -65,6 +64,7 @@ def get_dns_servers():
     host_name = None
     domain_name = None
     dns_servers = []
+
     if result == 0:
         dns_servers.append(ffi.string(pFixedInfo.DnsServerList.IpAddress.String, 16).decode())
 
