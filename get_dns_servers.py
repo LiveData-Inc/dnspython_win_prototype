@@ -53,12 +53,13 @@ def get_dns_servers():
 
     result = Iphlpapi.GetNetworkParams(pFixedInfo, pOutBufLen)
 
-    if result == ERROR_BUFFER_OVERFLOW:  # NOTE: this error is the expected, normal case
+    if result == ERROR_BUFFER_OVERFLOW:  # NOTE: this error is ok, it just means we need a bigger buffer
         bigger_FixedInfo = ffi.new("BYTE[]", pOutBufLen[0])
         pFixedInfo = ffi.cast("PFIXED_INFO", bigger_FixedInfo)
         result = Iphlpapi.GetNetworkParams(pFixedInfo, pOutBufLen)
 
-        dns_servers = []
+    dns_servers = []
+    if result == 0:
         dns_servers.append(ffi.string(pFixedInfo.DnsServerList.IpAddress.String, 16))
 
         pIPAddr = ffi.cast("PIP_ADDR_STRING", pFixedInfo.DnsServerList.Next)
@@ -66,7 +67,7 @@ def get_dns_servers():
             dns_servers.append(ffi.string(pIPAddr.IpAddress.String, 16))
             pIPAddr = pIPAddr.Next
 
-        return dns_servers
+    return dns_servers
 
 
 def main():
